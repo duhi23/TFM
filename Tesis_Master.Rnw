@@ -1,0 +1,55 @@
+\documentclass[12pt,a4paper,oneside]{book}
+\usepackage{amsmath,amsthm,amsfonts,amssymb}
+\usepackage{pst-eucl,pstricks,pstricks-add,multido, pst-plot}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,activeacute]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{times}
+\usepackage{titlesec}
+\usepackage{colortbl,color,graphicx}
+\usepackage{url,cite}
+\usepackage{float,multicol}
+\usepackage{wrapfig}
+\usepackage{lipsum}
+\usepackage{lmodern}
+\usepackage{epstopdf}
+\usepackage[anchorcolor=green,citecolor=blue,filecolor=green,linkcolor=green]{hyperref}
+% Definimos parámetros del documento
+\renewcommand{\figurename}{\small{\textbf{Figura}}}
+\renewcommand{\tablename}{\small{\textbf{Tabla}}}
+\renewcommand{\baselinestretch}{1.5}
+\parindent=0mm
+\renewcommand{\.}{\mbox{.}}
+
+\begin{document}
+\thispagestyle{empty}
+% Portada
+<<child-front, child='Definiciones/Portada.Rnw'>>=
+@
+\titlefront
+\newpage
+
+
+\def\contentsname{Tabla de contenidos}
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+
+\setcounter{page}{1}
+% Portada
+<<child-intro, child='Capitulos/Intro.Rnw'>>=
+@
+
+% \begingroup
+% \mainmatter
+\newpage
+
+\addcontentsline{toc}{chapter}{Bibliografía}
+\bibliographystyle{apalike}
+\bibliography{Bibliografia/Biblio}
+
+% \endgroup
+
+
+\end{document}
