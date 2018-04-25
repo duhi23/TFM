@@ -18,14 +18,14 @@ Pxt_t <- Pxt %>% dplyr::select(1,2,5) %>% spread(key="Year", value="Total")
 rm(list=c("Pxt"))
 
 # Gráfico tridimensional - data original
-z <- as.matrix(Pxt_t[,2:66])
+z <- as.matrix(Pxt_t[,17:66])
 edad <- seq(0, 110, by=1)
-tiempo <- seq(1950, 2014, by=1)
+tiempo <- seq(1965, 2014, by=1)
 color <- colorRampPalette(c("red", "yellow", "green"))(50)
 zfacet <- z[-1, -1] + z[-1, -length(tiempo)] + z[-length(edad), -1] + z[-length(edad), -length(tiempo)]
 facetcol <- cut(zfacet, 50)
-persp(edad, tiempo, z, theta=-30, phi=30, expand=0.75, xlab='Edad', col=color[facetcol],
-      ylab='Periodo', zlab='Población', ticktype="detailed", zlim=c(0,max(z)))
+persp(edad, tiempo, z, theta=-25, phi=25, expand=0.75, xlab='Edad', col=color[facetcol],
+      ylab='Periodo', zlab='', ticktype="detailed", zlim=c(0,max(z)))
 rm(list=c("z", "edad", "tiempo", "color", "zfacet", "facetcol"))
 
 # Número de defunciones correspondiente al año t
@@ -55,6 +55,18 @@ suavizar <- function(data){
       colnames(data_s) <- colnames(data)[-1]
       return(data_s)
 }
+
+# Gráfico tridimensional - data suavizada
+z <- suavizar(as.matrix(Pxt_t))[,16:65]
+edad <- seq(0, 110, by=1)
+tiempo <- seq(1965, 2014, by=1)
+color <- colorRampPalette(c("red", "yellow", "green"))(50)
+zfacet <- z[-1, -1] + z[-1, -length(tiempo)] + z[-length(edad), -1] + z[-length(edad), -length(tiempo)]
+facetcol <- cut(zfacet, 50)
+persp(edad, tiempo, z, theta=-25, phi=25, expand=0.75, xlab='Edad', col=color[facetcol],
+      ylab='Periodo', zlab='', ticktype="detailed", zlim=c(0,max(z)))
+rm(list=c("z", "edad", "tiempo", "color", "zfacet", "facetcol"))
+
 
 # Acotar data
 acotar <- function(data, age){
@@ -136,48 +148,49 @@ dataC_t <- StMoMoData(demogdata(data=mxt_t, pop=Ext_t[,c(16:55)], ages=c(0:105),
 #rm(list=c("mxt_m", "mxt_h", "mxt_t", "qxt_m", "qxt_h", "qxt_t", "Pxt_m", "Pxt_h", "Pxt_t",
 #          "Ext_m", "Ext_h", "Ext_t", "Dxt_m", "Dxt_h", "Dxt_t", "suavizar"))
 
-#############################################
-####   Ajuste modelo Lee Carter Poisson   ###
-#############################################
+
+################################################
+#####   Ajuste modelo Lee Carter Poisson   #####
+################################################
 
 LC <- lc(link="log", const = "sum")
 LCfit_m <- fit(LC, data = dataC_m)
 LCfit_h <- fit(LC, data = dataC_h)
 LCfit_t <- fit(LC, data = dataC_t)
 
-# Gráfico parametro ax
+# Gráfico parámetro ax
 plot(LCfit_m$ax, type='o', col=2, pch=20, ylim=c(-10,0), xlab='', ylab='')
 par(new=TRUE)
 plot(LCfit_h$ax, type='o', col=3, pch=20, ylim=c(-10,0), xlab='', ylab='')
-par(new=TRUE)
-plot(LCfit_t$ax, type='o', col=4, pch=18, ylim=c(-10,0), xlab='Edad', ylab='ax')
-legend(65, -6, legend=c("Mujeres", "Hombres", "Total"), col=c("red", "green", "blue"), cex=0.5,
-       box.lty=0, text.font=10, lwd=2)
+#par(new=TRUE)
+#plot(LCfit_t$ax, type='o', col=4, pch=18, ylim=c(-10,0), xlab='Edad', ylab='ax')
+#op <- par(cex = 2.8)
+legend(60, -5, legend=c("Mujeres", "Hombres"), col=c("red", "green"), cex=0.9, lwd=3, bty = 'n')
+
+
 
 # Gráfico parametro bx
 plot(LCfit_m$bx, type='o', col=2, pch=20, ylim=c(-0.035,0.05), xlab='', ylab='')
 par(new=TRUE)
 plot(LCfit_h$bx, type='o', col=3, pch=20, ylim=c(-0.035,0.05), xlab='', ylab='')
-par(new=TRUE)
-plot(LCfit_t$bx, type='o', col=4, pch=18, ylim=c(-0.035,0.05), xlab='Edad', ylab='bx')
+#par(new=TRUE)
+#plot(LCfit_t$bx, type='o', col=4, pch=18, ylim=c(-0.035,0.05), xlab='Edad', ylab='bx')
 abline(h=0,lty=3)
-legend(45, -0.002, legend=c("Mujeres", "Hombres", "Total"), col=c("red", "green", "blue"), cex=0.5,
-       box.lty=0, text.font=10, lwd=2)
+legend(45, 0.005, legend=c("Mujeres", "Hombres"), col=c("red", "green"), cex=0.9, lwd=3, bty = 'n')
 
 # Gráfico parametro kt
-plot(seq(1965,2004),as.numeric(LCfit_m$kt), type='o', col=2, pch=20, ylim=c(-60,60), xlab='', ylab='')
+plot(seq(1965,2004),as.numeric(LCfit_m$kt), type='o', col=2, pch=20, ylim=c(-55,55), xlab='', ylab='')
 par(new=TRUE)
-plot(seq(1965,2004),as.numeric(LCfit_h$kt), type='o', col=3, pch=20, ylim=c(-60,60), xlab='', ylab='')
-par(new=TRUE)
-plot(seq(1965,2004),as.numeric(LCfit_t$kt), type='o', col=4, pch=18, ylim=c(-60,60), xlab='Periodo', ylab='kt')
+plot(seq(1965,2004),as.numeric(LCfit_h$kt), type='o', col=3, pch=20, ylim=c(-55,55), xlab='', ylab='')
+#par(new=TRUE)
+#plot(seq(1965,2004),as.numeric(LCfit_t$kt), type='o', col=4, pch=18, ylim=c(-55,55), xlab='Periodo', ylab='kt')
 abline(h=0,lty=3)
-legend(1985, 55, legend=c("Hombres", "Mujeres", "Total"), col=c("red", "green", "blue"), cex=0.5,
-       box.lty=0, text.font=10, lwd=2)
+legend(1985, 60, legend=c("Hombres", "Mujeres"), col=c("red", "green"), cex=0.9, lwd=3, bty = 'n')
 
 # Proyección parámetro kt
-est_m <- forecast(LCfit_m, h=40, level=c(90,95))
-est_h <- forecast(LCfit_h, h=40, level=c(90,95))
-est_t <- forecast(LCfit_t, h=40, level=c(90,95))
+est_m <- forecast(LCfit_m, h=50, level=c(90,95))
+est_h <- forecast(LCfit_h, h=50, level=c(90,95))
+est_t <- forecast(LCfit_t, h=50, level=c(90,95))
 plot(est_m, only.kt=TRUE, col='lightgreen')
 plot(est_h, only.kt=TRUE, col='lightpink')
 plot(est_t, only.kt=TRUE, col='lightblue')
@@ -188,70 +201,99 @@ for_qxt <- function(est){
       m <- exp(est$model$ax + est$model$bx %*% est$kt.f$mean)
       q <- 2*m/(2+m)
       colnames(q) <- colnames(m)
-      return(q)
+      return(m)
 }
 
 for_qxt(est_m)
 
 # Error cuadrático medio
-apply(ctasas(Dxt_m,Pxt_m,56,65) - for_qxt(est_m)[,c(1:10)], 2, function(x){sqrt(sum(x^2/10))})
-apply(ctasas(Dxt_h,Pxt_h,56,65) - for_qxt(est_h)[,c(1:10)], 2, function(x){sqrt(sum(x^2/10))})
-apply(ctasas(Dxt_t,Pxt_t,56,65) - for_qxt(est_t)[,c(1:10)], 2, function(x){sqrt(sum(x^2/10))})
+error_m <- apply(ctasas(Dxt_m,Pxt_m,56,65) - for_qxt(est_m)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
+error_m
+error_h <- apply(ctasas(Dxt_h,Pxt_h,56,65) - for_qxt(est_h)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
+error_h
+error_t <- apply(ctasas(Dxt_t,Pxt_t,56,65) - for_qxt(est_t)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
+error_t
 
-plot(log(ctasas(Dxt_m,Pxt_m,56,65))[,1], col=2, type='o', ylim=c(-10,0))
+
+plot(log(ctasas(Dxt_m,Pxt_m,56,65))[41:106,1], col=2, type='o', ylim=c(-10,0))
 par(new=TRUE)
-plot(log(for_qxt(est_m))[,1], col=3, type='o', ylim=c(-10,0))
+plot(log(for_qxt(est_m))[41:106,1], col=3, type='o', ylim=c(-10,0))
+
+
+plot(log(ctasas(Dxt_h,Pxt_h,56,65))[41:106,1], col=2, type='o', ylim=c(-10,0))
+par(new=TRUE)
+plot(log(for_qxt(est_h))[41:106,1], col=3, type='o', ylim=c(-10,0))
 
 
 #######################################
 ######      Ajuste modelo CBD     #####
 #######################################
 
-CBD <- cbd()
+CBD <- cbd("logit")
 CBDfit_m <- fit(CBD, data = data0_m, ages.fit = 60:105, years=1950:2005)
 CBDfit_h <- fit(CBD, data = data0_h, ages.fit = 60:105, years=1950:2005)
 CBDfit_t <- fit(CBD, data = data0_t, ages.fit = 60:105, years=1950:2005)
 
-# Gráfico parametro kt(1)
+# Gráfico parámetro kt(1)
 plot(CBDfit_m$kt[1,], type='o', col=2, pch=20, ylim=c(-3,-1.5), xlab='', ylab='')
 par(new=TRUE)
 plot(CBDfit_h$kt[1,], type='o', col=3, pch=20, ylim=c(-3,-1.5), xlab='', ylab='')
 par(new=TRUE)
 plot(CBDfit_t$kt[1,], type='o', col=4, pch=18, ylim=c(-3,-1.5), xlab='Edad', ylab='kt(1)')
-legend(43, -1.5, legend=c("Mujeres", "Hombres", "Total"), col=c("red", "green", "blue"), cex=0.5,
+legend(28, -1.5, legend=c("Mujeres", "Hombres", "Total"), col=c("red", "green", "blue"), cex=0.5,
        box.lty=0, text.font=10, lwd=2)
 
-# Gráfico parametro kt(2)
+# Gráfico parámetro kt(2)
 plot(CBDfit_m$kt[2,], type='o', col=2, pch=20, ylim=c(0.07,0.15), xlab='', ylab='')
 par(new=TRUE)
 plot(CBDfit_h$kt[2,], type='o', col=3, pch=20, ylim=c(0.07,0.15), xlab='', ylab='')
 par(new=TRUE)
 plot(CBDfit_t$kt[2,], type='o', col=4, pch=18, ylim=c(0.07,0.15), xlab='Edad', ylab='kt(2)')
-legend(35, 0.10, legend=c("Mujeres", "Hombres", "Total"), col=c("red", "green", "blue"), cex=0.5,
+legend(28, 0.10, legend=c("Mujeres", "Hombres", "Total"), col=c("red", "green", "blue"), cex=0.5,
        box.lty=0, text.font=10, lwd=2)
 
 # Proyección parámetro kt
-pro_m <- forecast(CBDfit_m, h=40, level=c(90,95))
-pro_h <- forecast(CBDfit_h, h=40, level=c(90,95))
-pro_t <- forecast(CBDfit_t, h=40, level=c(90,95))
+pro_m <- forecast(CBDfit_m, h=50, level=c(90,95))
+pro_h <- forecast(CBDfit_h, h=50, level=c(90,95))
+pro_t <- forecast(CBDfit_t, h=50, level=c(90,95))
 plot(pro_m, only.kt=TRUE, col='lightgreen')
 plot(pro_h, only.kt=TRUE, col='lightpink')
 plot(pro_t, only.kt=TRUE, col='lightblue')
+
+# Transforma vectores en matrices fila o columna
+fm <- function(vector, rc){
+      lon <- length(vector)
+      if(rc==1){
+            res <- matrix(unlist(vector), nrow=1, ncol=lon)
+      } else {
+            res <- matrix(unlist(vector), nrow=lon, ncol=1)
+      }
+      return(res)
+} 
+
+
+lg_qxt <- function(pro){
+      x <- fm(rep(1,46),2)%*%fm(pro$kt.f$mean[1,],1) + fm(pro$ages-mean(pro$ages),2)%*% fm(pro$kt.f$mean[2,],1)
+      q <- exp(x)/(1+exp(x))
+      return(q)
+}
+
+lg_qxt(pro_m)
+
+# Error cuadrático medio
+err_m <- apply(ctasas(Dxt_m,Pxt_m,56,65)[61:106,] - lg_qxt(pro_m)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
+err_m
+err_h <- apply(ctasas(Dxt_h,Pxt_h,56,65)[61:106,] - lg_qxt(pro_h)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
+err_h
+err_t <- apply(ctasas(Dxt_t,Pxt_t,56,65)[61:106,] - lg_qxt(pro_t)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
+err_t
+
 
 
 ########################################
 #####     Ajuste modelo li-lee     #####
 ########################################
 
-fm <- function(vector, rc){
-      lon <- length(vector)
-      if(rc==1){
-            res <- as.matrix(vector, nrow=1, ncol=lon)
-      } else {
-            res <- as.matrix(vector, nrow=lon, ncol=1)
-      }
-      return(res)
-} 
 
 LCT <- lc(link="logit", const = "sum")
 LCT_m <- fit(LCT, data = data0_m, ages.fit = 0:105, years=1950:2005)
@@ -263,104 +305,30 @@ pres_m <- log(qxt_m)-LCT_m$ax
 res_h <- log(qxt_h)-LCT_h$ax-fm(LCT_t$bx,2)%*%fm(LCT_t$kt,1)
 pres_h <- log(qxt_h)-LCT_h$ax
 
+# Ratio ajuste factor común
 Rc_m <- 1-(sum(res_m^2))/(sum(pres_m^2))
+Rc_h <- 1-(sum(res_h^2))/(sum(pres_h^2))
 
-Rc <- function(res,ax)
+# SVD residuos
+svd_res <- function(residuos){
+      res <- residuos - apply(residuos, 1, mean)
+      const <- sum(svd(res)$u[,1])
+      b <- svd(res)$u[,1]/const
+      k <- const*svd(res)$d[1]*svd(res)$v[,1]
+      return(list(bx=b, kt=k))
+}
+ 
+svd_res(res_m)
+ 
+sum(svd_res(res_m)$bx)
+sum(svd_res(res_m)$kt)
 
-resM=log(dM)-axM-B%*%t(K)
-num=sum(resM^2)
-den=sum((log(dM)-axM)^2)
-RcM=1-num/den
-RcM
+# Ratio ajuste incluye residuos SVD
+nres_m <- log(qxt_m) - LCT_m$ax - fm(LCT_t$bx,2)%*%fm(LCT_t$kt,1) - fm(svd_res(res_m)$bx,2)%*%fm(svd_res(res_m)$kt,1)
+nres_h <- log(qxt_h) - LCT_h$ax - fm(LCT_t$bx,2)%*%fm(LCT_t$kt,1) - fm(svd_res(res_h)$bx,2)%*%fm(svd_res(res_h)$kt,1)
+Rca_m <- 1-(sum(nres_m^2))/(sum(pres_m^2))
+Rca_h <- 1-(sum(nres_h^2))/(sum(pres_h^2))
 
-
-
-rm(list=ls())
-
-inicio=Sys.time()
-
-### setwd("ruta")              #### directorio del archivo
-
-
-
-MINaño=1960
-MAXaño=2015
-
-
-#####################################################
-### ESTIMACIÓN DEL MODELO LI-LEE PARA EL TRAMO TOTAL
-#####################################################
-
-MINedad=0
-MAXedad=110
-FT1=50       #### FT1 = Fin del tramo 1
-
-MP=matrix(0,6,5)           ### MP = Matriz de parámetros
-colnames(MP)=c("TC-valor","TC-p.val","rho-valor","rho-p.val","Modelo")
-rownames(MP)=c(paste(MINedad,"-",MAXedad,"H"),paste(MINedad,"-",MAXedad,"M"),
-               paste(MINedad,"-",FT1,"H"),paste(MINedad,"-",FT1,"M"),
-               paste(FT1+1,"-",MAXedad,"H"),paste(FT1+1,"-",MAXedad,"M"))
-
-MP2=matrix(0,6,5)           ### MP2 = Matriz de parámetros cuando el término constante es nulo
-colnames(MP2)=colnames(MP)
-rownames(MP2)=rownames(MP)
-
-MP=data.frame(MP)
-MP2=data.frame(MP2)
-
-
-
-## Estimación del Lee-Carter conjunto (sin distinguir por sexos)
-
-
-
-USAdat=hmd.mx("USA",paste("diego.21.phs@hotmail.com","diegopaul",sep=":"),"USA")
-USAsel=extract.years(extract.ages(USAdat,MINedad:MAXedad,combine.upper=T),year=MINaño:MAXaño)
-
-MLC=lca(USAsel,series="total",adjust="dxt",max.age=MAXedad)
-
-B=MLC$bx
-K=MLC$kt
-
-dM=USAsel$rate$male
-dF=USAsel$rate$female
-axM=apply(log(dM),1,mean)
-axF=apply(log(dF),1,mean)
-
-
-## Obtención de la ratio Rc
-
-resM=log(dM)-axM-B%*%t(K)
-num=sum(resM^2)
-den=sum((log(dM)-axM)^2)
-RcM=1-num/den
-RcM
-
-resF=log(dF)-axF-B%*%t(K)
-num=sum(resF^2)
-den=sum((log(dF)-axF)^2)
-RcF=1-num/den
-RcF
-
-#### Obtención de los bx y kt específicos de cada sexo
-
-X=resM
-ax=apply(X,1,mean)
-ZX=X-ax
-DFX=svd(ZX)
-sux=sum(DFX$u[,1])       ### su = suma de las componentes del primer vector por la izquierda
-bxM=DFX$u[,1]/sux
-lambdax=max(DFX$d)            ### c = autovalor de mayor tamaño
-ktM=lambdax*sux*DFX$v[,1]
-
-Y=resF
-ay=apply(Y,1,mean)
-ZY=Y-ay
-DFY=svd(ZY)
-suy=sum(DFY$u[,1])       ### su = suma de las componentes del primer vector por la izquierda
-bxF=DFY$u[,1]/suy
-lambday=max(DFY$d)            ### c = autovalor de mayor tamaño
-ktF=lambday*suy*DFY$v[,1]
 
 
 ## Obtención de la ratio Rac
