@@ -43,33 +43,23 @@ Ext_t <- Ext %>% dplyr::select(1,2,5) %>% spread(key="Year", value="Total")
 rm(list=c("Ext"))
 
 # Función suavizado superficies - P-Splines
-suavizar <- function(data){
-      n_dim <- dim(data)
-      data <- as.matrix(data)
-      data_s <- mat.or.vec(n_dim[1],(n_dim[2]-1))
-      for(j in 2:n_dim[2]){
-            sp.spline <- smooth.Pspline(x = data[,1], y = data[,j], method = 4, norder = 3)
-            ajuste <- predict(sp.spline, x = data[,1])
-            data_s[,j-1] <- abs(round(ajuste[1:n_dim[1]],0))
-      }
-      colnames(data_s) <- colnames(data)[-1]
-      return(data_s)
-}
-
-# Gráfico tridimensional - data suavizada
-z <- suavizar(as.matrix(Pxt_t))[,16:65]
-edad <- seq(0, 110, by=1)
-tiempo <- seq(1965, 2014, by=1)
-color <- colorRampPalette(c("red", "yellow", "green"))(50)
-zfacet <- z[-1, -1] + z[-1, -length(tiempo)] + z[-length(edad), -1] + z[-length(edad), -length(tiempo)]
-facetcol <- cut(zfacet, 50)
-persp(edad, tiempo, z, theta=-25, phi=25, expand=0.75, xlab='Edad', col=color[facetcol],
-      ylab='Periodo', zlab='', ticktype="detailed", zlim=c(0,max(z)))
-rm(list=c("z", "edad", "tiempo", "color", "zfacet", "facetcol"))
+# suavizar <- function(data){
+#       n_dim <- dim(data)
+#       data <- as.matrix(data)
+#       data_s <- mat.or.vec(n_dim[1],(n_dim[2]-1))
+#       for(j in 2:n_dim[2]){
+#             sp.spline <- smooth.Pspline(x = data[,1], y = data[,j], method = 4, norder = 3)
+#             ajuste <- predict(sp.spline, x = data[,1])
+#             data_s[,j-1] <- abs(round(ajuste[1:n_dim[1]],0))
+#       }
+#       colnames(data_s) <- colnames(data)[-1]
+#       return(data_s)
+# }
 
 
 # Acotar data
 acotar <- function(data, age){
+      data <- as.matrix(data)[,-c(1)]
       ndim <- dim(data)
       ndata <- matrix(0, ncol=ndim[2], nrow=(age+1))
       ndata[1:age,] <- as.matrix(data)[1:age,]
@@ -80,29 +70,17 @@ acotar <- function(data, age){
 }
 
 
-Ext_m <- acotar(suavizar(Ext_m), 105)
-Ext_h <- acotar(suavizar(Ext_h), 105)
-Ext_t <- acotar(suavizar(Ext_t), 105)
+Ext_m <- acotar(Ext_m, 105)
+Ext_h <- acotar(Ext_h, 105)
+Ext_t <- acotar(Ext_t, 105)
 
-Pxt_m <- acotar(suavizar(Pxt_m), 105)
-Pxt_h <- acotar(suavizar(Pxt_h), 105)
-Pxt_t <- acotar(suavizar(Pxt_t), 105)
+Pxt_m <- acotar(Pxt_m, 105)
+Pxt_h <- acotar(Pxt_h, 105)
+Pxt_t <- acotar(Pxt_t, 105)
 
-Dxt_m <- acotar(suavizar(Dxt_m), 105)
-Dxt_h <- acotar(suavizar(Dxt_h), 105)
-Dxt_t <- acotar(suavizar(Dxt_t), 105)
-
-# Gráfico tridimensional - data suavizada & acotada
-z <- Dxt_m
-edad <- seq(0, 105, by=1)
-tiempo <- seq(1950, 2014, by=1)
-color <- colorRampPalette(c("red", "yellow", "green"))(50)
-zfacet <- z[-1, -1] + z[-1, -length(tiempo)] + z[-length(edad), -1] + z[-length(edad), -length(tiempo)]
-facetcol <- cut(zfacet, 50)
-persp(edad, tiempo, z, theta=-60, phi=30, expand=0.75, xlab='Edad', col=color[facetcol],
-      ylab='Periodo', zlab='Población', ticktype="detailed", zlim=c(0,max(z)))
-rm(list=c("z", "edad", "tiempo", "color", "zfacet", "facetcol"))
-
+Dxt_m <- acotar(Dxt_m, 105)
+Dxt_h <- acotar(Dxt_h, 105)
+Dxt_t <- acotar(Dxt_t, 105)
 
 
 # Creación de tasas y probabilidades de muerte
@@ -120,14 +98,14 @@ qxt_h <- ctasas(Dxt_h,Pxt_h,16,55)
 qxt_t <- ctasas(Dxt_t,Pxt_t,16,55)
 
 # Gráfico tridimensional - Log tasas de mortalidad
-z <- log(mxt_m)
+z <- log(qxt_m)
 edad <- seq(0, 105, by=1)
 tiempo <- seq(1965, 2004, by=1)
-color <- colorRampPalette(c("red", "yellow", "green"))(50)
+color <- colorRampPalette(c("green", "yellow", "orange", "red"))(50)
 zfacet <- z[-1, -1] + z[-1, -length(tiempo)] + z[-length(edad), -1] + z[-length(edad), -length(tiempo)]
 facetcol <- cut(zfacet, 50)
-persp(edad, tiempo, z, theta=-50, phi=30, expand=0.75, xlab='Edad', col=color[facetcol],
-      ylab='Periodo', zlab='Población', ticktype="detailed", zlim=c(min(z),0))
+persp(edad, tiempo, z, theta=-30, phi=30, expand=0.75, xlab='Edad', col=color[facetcol],
+      ylab='Periodo', zlab='', ticktype="detailed", zlim=c(min(z),0))
 rm(list=c("z", "edad", "tiempo", "color", "zfacet", "facetcol"))
 
 # Creación objeto demogdata
@@ -170,9 +148,9 @@ legend(60, -5, legend=c("Mujeres", "Hombres"), col=c("red", "green"), cex=0.9, l
 
 
 # Gráfico parametro bx
-plot(LCfit_m$bx, type='o', col=2, pch=20, ylim=c(-0.035,0.05), xlab='', ylab='')
+plot(LCfit_m$bx, type='o', col=2, pch=20, ylim=c(-0.045,0.05), xlab='', ylab='')
 par(new=TRUE)
-plot(LCfit_h$bx, type='o', col=3, pch=20, ylim=c(-0.035,0.05), xlab='', ylab='')
+plot(LCfit_h$bx, type='o', col=3, pch=20, ylim=c(-0.045,0.05), xlab='', ylab='')
 #par(new=TRUE)
 #plot(LCfit_t$bx, type='o', col=4, pch=18, ylim=c(-0.035,0.05), xlab='Edad', ylab='bx')
 abline(h=0,lty=3)
@@ -215,42 +193,47 @@ error_t <- apply(ctasas(Dxt_t,Pxt_t,56,65) - for_qxt(est_t)[,c(1:10)], 2, functi
 error_t
 
 
-plot(log(ctasas(Dxt_m,Pxt_m,56,65))[41:106,1], col=2, type='o', ylim=c(-10,0))
+plot(log(ctasas(Dxt_m,Pxt_m,56,65))[,1], col=2, type='o', ylim=c(-10,0))
 par(new=TRUE)
-plot(log(for_qxt(est_m))[41:106,1], col=3, type='o', ylim=c(-10,0))
+plot(log(for_qxt(est_m))[,1], col=3, type='o', ylim=c(-10,0))
 
 
-plot(log(ctasas(Dxt_h,Pxt_h,56,65))[41:106,1], col=2, type='o', ylim=c(-10,0))
+plot(log(ctasas(Dxt_h,Pxt_h,56,65))[,1], col=2, type='o', ylim=c(-10,0))
 par(new=TRUE)
-plot(log(for_qxt(est_h))[41:106,1], col=3, type='o', ylim=c(-10,0))
+plot(log(for_qxt(est_h))[,1], col=3, type='o', ylim=c(-10,0))
 
 
 #######################################
 ######      Ajuste modelo CBD     #####
 #######################################
 
+fun_logit <- function(qxt){
+      res<- log(1-qxt)-log(qxt)
+      return(res)
+}
+
+plot(fun_logit(qxt_h)[,20])
+
 CBD <- cbd("logit")
-CBDfit_m <- fit(CBD, data = data0_m, ages.fit = 60:105, years=1950:2005)
-CBDfit_h <- fit(CBD, data = data0_h, ages.fit = 60:105, years=1950:2005)
-CBDfit_t <- fit(CBD, data = data0_t, ages.fit = 60:105, years=1950:2005)
+CBDfit_m <- fit(CBD, data = data0_m, ages.fit = 0:105, years=1965:2004)
+CBDfit_h <- fit(CBD, data = data0_h, ages.fit = 0:105, years=1965:2004)
+CBDfit_t <- fit(CBD, data = data0_t, ages.fit = 0:105, years=1965:2004)
 
 # Gráfico parámetro kt(1)
-plot(CBDfit_m$kt[1,], type='o', col=2, pch=20, ylim=c(-3,-1.5), xlab='', ylab='')
+plot(seq(1965,2004),CBDfit_m$kt[1,], type='o', col=2, pch=20, ylim=c(-7,-4), xlab='', ylab='')
 par(new=TRUE)
-plot(CBDfit_h$kt[1,], type='o', col=3, pch=20, ylim=c(-3,-1.5), xlab='', ylab='')
-par(new=TRUE)
-plot(CBDfit_t$kt[1,], type='o', col=4, pch=18, ylim=c(-3,-1.5), xlab='Edad', ylab='kt(1)')
-legend(28, -1.5, legend=c("Mujeres", "Hombres", "Total"), col=c("red", "green", "blue"), cex=0.5,
-       box.lty=0, text.font=10, lwd=2)
+plot(seq(1965,2004),CBDfit_h$kt[1,], type='o', col=3, pch=20, ylim=c(-7,-4), xlab='', ylab='')
+#par(new=TRUE)
+#plot(seq(1965,2004),CBDfit_t$kt[1,], type='o', col=4, pch=18, ylim=c(-3,-1.5), xlab='Edad', ylab='kt(1)')
+legend(1980, -5.8, legend=c("Hombres", "Mujeres"), col=c("red", "green"), cex=0.9, lwd=3, bty = 'n')
 
 # Gráfico parámetro kt(2)
-plot(CBDfit_m$kt[2,], type='o', col=2, pch=20, ylim=c(0.07,0.15), xlab='', ylab='')
+plot(seq(1965,2004),CBDfit_m$kt[2,], type='o', col=2, pch=20, ylim=c(0.04,0.13), xlab='', ylab='')
 par(new=TRUE)
-plot(CBDfit_h$kt[2,], type='o', col=3, pch=20, ylim=c(0.07,0.15), xlab='', ylab='')
-par(new=TRUE)
-plot(CBDfit_t$kt[2,], type='o', col=4, pch=18, ylim=c(0.07,0.15), xlab='Edad', ylab='kt(2)')
-legend(28, 0.10, legend=c("Mujeres", "Hombres", "Total"), col=c("red", "green", "blue"), cex=0.5,
-       box.lty=0, text.font=10, lwd=2)
+plot(seq(1965,2004),CBDfit_h$kt[2,], type='o', col=3, pch=20, ylim=c(0.04,0.13), xlab='', ylab='')
+#par(new=TRUE)
+#plot(seq(1965,2004),CBDfit_t$kt[2,], type='o', col=4, pch=18, ylim=c(0.07,0.15), xlab='Edad', ylab='kt(2)')
+legend(1980, 0.07, legend=c("Hombres", "Mujeres"), col=c("red", "green"), cex=0.9, lwd=3, bty = 'n')
 
 # Proyección parámetro kt
 pro_m <- forecast(CBDfit_m, h=50, level=c(90,95))
