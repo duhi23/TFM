@@ -173,6 +173,11 @@ plot(est_m, only.kt=TRUE, col='lightgreen')
 plot(est_h, only.kt=TRUE, col='lightpink')
 plot(est_t, only.kt=TRUE, col='lightblue')
 
+tsm <- ts(as.numeric(LCfit_m$kt), start=c(1965, 1), end=c(2004, 1), frequency=1)
+tsh <- ts(as.numeric(LCfit_h$kt), start=c(1965, 1), end=c(2004, 1), frequency=1)
+
+summary(Arima(tsm, order=c(0,1,0), include.drift=TRUE))
+summary(Arima(tsh, order=c(0,1,0), include.drift=TRUE))
 
 # Obtención qxt estimados
 for_qxt <- function(est){
@@ -182,7 +187,17 @@ for_qxt <- function(est){
       return(m)
 }
 
-for_qxt(est_m)
+
+# Gráfico tridimensional - Log tasas de mortalidad proyectadas
+z <- log(for_qxt(est_m))
+edad <- seq(0, 105, by=1)
+tiempo <- seq(2005, 2054, by=1)
+color <- colorRampPalette(c("green", "yellow", "orange", "red"))(50)
+zfacet <- z[-1, -1] + z[-1, -length(tiempo)] + z[-length(edad), -1] + z[-length(edad), -length(tiempo)]
+facetcol <- cut(zfacet, 50)
+persp(edad, tiempo, z, theta=-30, phi=30, expand=0.75, xlab='Edad', col=color[facetcol],
+      ylab='Periodo', zlab='', ticktype="detailed", zlim=c(min(z),0.95))
+rm(list=c("z", "edad", "tiempo", "color", "zfacet", "facetcol"))
 
 # Error cuadrático medio
 error_m <- apply(ctasas(Dxt_m,Pxt_m,56,65) - for_qxt(est_m)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
@@ -212,8 +227,21 @@ fun_logit <- function(qxt){
       return(res)
 }
 
-plot(fun_logit(qxt_h)[,20])
+# Gráfico logit qxt
+q <- qxt_m
+plot(fun_logit(q)[,1], col=2, type='p', ylim=c(-1.2,9.5), pch=18, ylab='')
+par(new=TRUE)
+plot(fun_logit(q)[,11], col=3, type='p', ylim=c(-1.2,9.5), pch=20, ylab='')
+par(new=TRUE)
+plot(fun_logit(q)[,21], col=4, type='p', ylim=c(-1.2,9.5), pch=18, ylab='')
+par(new=TRUE)
+plot(fun_logit(q)[,31], col=5, type='p', ylim=c(-1.2,9.5), pch=20, ylab='')
+par(new=TRUE)
+plot(fun_logit(q)[,40], col=6, type='p', ylim=c(-1.2,9.5), pch=18, ylab='logit(qxt)')
+legend(6, 6, legend=c("1965", "1975", "1985", "1995", "2004"), col=c(2, 3,4,5,6), cex=0.9, lwd=3, bty = 'n')
+rm(list=c("q"))
 
+# Modelo
 CBD <- cbd("logit")
 CBDfit_m <- fit(CBD, data = data0_m, ages.fit = 0:105, years=1965:2004)
 CBDfit_h <- fit(CBD, data = data0_h, ages.fit = 0:105, years=1965:2004)
@@ -243,6 +271,15 @@ plot(pro_m, only.kt=TRUE, col='lightgreen')
 plot(pro_h, only.kt=TRUE, col='lightpink')
 plot(pro_t, only.kt=TRUE, col='lightblue')
 
+
+tsm <- ts(as.numeric(CBDfit_m$kt[2,]), start=c(1965, 1), end=c(2004, 1), frequency=1)
+tsh <- ts(as.numeric(CBDfit_h$kt[2,]), start=c(1965, 1), end=c(2004, 1), frequency=1)
+
+summary(Arima(tsm, order=c(0,1,0), include.drift=TRUE))
+summary(Arima(tsh, order=c(0,1,0), include.drift=TRUE))
+
+
+
 # Transforma vectores en matrices fila o columna
 fm <- function(vector, rc){
       lon <- length(vector)
@@ -256,12 +293,25 @@ fm <- function(vector, rc){
 
 
 lg_qxt <- function(pro){
-      x <- fm(rep(1,46),2)%*%fm(pro$kt.f$mean[1,],1) + fm(pro$ages-mean(pro$ages),2)%*% fm(pro$kt.f$mean[2,],1)
+      # generar secuencia de 1
+      x <- fm(rep(1,106),2)%*%fm(pro$kt.f$mean[1,],1) + fm(pro$ages-mean(pro$ages),2)%*% fm(pro$kt.f$mean[2,],1)
       q <- exp(x)/(1+exp(x))
       return(q)
 }
 
-lg_qxt(pro_m)
+lg_qxt(pro_m)-pro_m$rates
+
+# Gráfico tridimensional - Log tasas de mortalidad
+z <- log(pro_h$rates)
+edad <- seq(0, 105, by=1)
+tiempo <- seq(2005, 2054, by=1)
+color <- colorRampPalette(c("green", "yellow", "orange", "red"))(50)
+zfacet <- z[-1, -1] + z[-1, -length(tiempo)] + z[-length(edad), -1] + z[-length(edad), -length(tiempo)]
+facetcol <- cut(zfacet, 50)
+persp(edad, tiempo, z, theta=-30, phi=30, expand=0.75, xlab='Edad', col=color[facetcol],
+      ylab='Periodo', zlab='', ticktype="detailed", zlim=c(min(z),0))
+rm(list=c("z", "edad", "tiempo", "color", "zfacet", "facetcol"))
+
 
 # Error cuadrático medio
 err_m <- apply(ctasas(Dxt_m,Pxt_m,56,65)[61:106,] - lg_qxt(pro_m)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
@@ -278,7 +328,7 @@ err_t
 ########################################
 
 
-LCT <- lc(link="logit", const = "sum")
+LCT <- lc(link="log", const = "sum")
 LCT_m <- fit(LCT, data = data0_m, ages.fit = 0:105, years=1950:2005)
 LCT_h <- fit(LCT, data = data0_h, ages.fit = 0:105, years=1950:2005)
 LCT_t <- fit(LCT, data = data0_t, ages.fit = 0:105, years=1950:2005)
