@@ -3,6 +3,7 @@
 # Diego Paul Huaraca Shagñay
 # TFM: Riesgo de Longevidad en la Población Española
 
+start <- Sys.time()
 # Datos - Human Mortality Database
 options(tz="Europe/Madrid")
 libs <- c('readxl', 'sme', 'tidyverse', 'forecast', 'foreign', 'MASS', 'demography', 'lifecontingencies',
@@ -81,7 +82,7 @@ Pxt_t <- acotar(Pxt_t, 105)
 Dxt_m <- acotar(Dxt_m, 105)
 Dxt_h <- acotar(Dxt_h, 105)
 Dxt_t <- acotar(Dxt_t, 105)
-
+rm(list=c("acotar"))
 
 # Creación de tasas y probabilidades de muerte
 ctasas <- function(dxt,ext,ini,fin){
@@ -135,6 +136,7 @@ LC <- lc(link="log", const = "sum")
 LCfit_m <- fit(LC, data = dataC_m)
 LCfit_h <- fit(LC, data = dataC_h)
 LCfit_t <- fit(LC, data = dataC_t)
+rm(list = c("LC"))
 
 # Gráfico parámetro ax
 plot(LCfit_m$ax, type='o', col=2, pch=20, ylim=c(-10,0), xlab='', ylab='')
@@ -146,7 +148,6 @@ plot(LCfit_h$ax, type='o', col=3, pch=20, ylim=c(-10,0), xlab='', ylab='')
 legend(60, -5, legend=c("Mujeres", "Hombres"), col=c("red", "green"), cex=0.9, lwd=3, bty = 'n')
 
 
-
 # Gráfico parametro bx
 plot(LCfit_m$bx, type='o', col=2, pch=20, ylim=c(-0.045,0.05), xlab='', ylab='')
 par(new=TRUE)
@@ -155,6 +156,7 @@ plot(LCfit_h$bx, type='o', col=3, pch=20, ylim=c(-0.045,0.05), xlab='', ylab='')
 #plot(LCfit_t$bx, type='o', col=4, pch=18, ylim=c(-0.035,0.05), xlab='Edad', ylab='bx')
 abline(h=0,lty=3)
 legend(45, 0.005, legend=c("Mujeres", "Hombres"), col=c("red", "green"), cex=0.9, lwd=3, bty = 'n')
+
 
 # Gráfico parametro kt
 plot(seq(1965,2004),as.numeric(LCfit_m$kt), type='o', col=2, pch=20, ylim=c(-55,55), xlab='', ylab='')
@@ -165,6 +167,7 @@ plot(seq(1965,2004),as.numeric(LCfit_h$kt), type='o', col=3, pch=20, ylim=c(-55,
 abline(h=0,lty=3)
 legend(1985, 60, legend=c("Hombres", "Mujeres"), col=c("red", "green"), cex=0.9, lwd=3, bty = 'n')
 
+
 # Proyección parámetro kt
 est_m <- forecast(LCfit_m, h=50, level=c(90,95))
 est_h <- forecast(LCfit_h, h=50, level=c(90,95))
@@ -173,11 +176,12 @@ plot(est_m, only.kt=TRUE, col='lightgreen')
 plot(est_h, only.kt=TRUE, col='lightpink')
 plot(est_t, only.kt=TRUE, col='lightblue')
 
+# Comprobación modelos arima
 tsm <- ts(as.numeric(LCfit_m$kt), start=c(1965, 1), end=c(2004, 1), frequency=1)
 tsh <- ts(as.numeric(LCfit_h$kt), start=c(1965, 1), end=c(2004, 1), frequency=1)
-
 summary(Arima(tsm, order=c(0,1,0), include.drift=TRUE))
 summary(Arima(tsh, order=c(0,1,0), include.drift=TRUE))
+rm(list = c("tsm", "tsh"))
 
 # Obtención qxt estimados
 for_qxt <- function(est){
@@ -199,23 +203,6 @@ persp(edad, tiempo, z, theta=-30, phi=30, expand=0.75, xlab='Edad', col=color[fa
       ylab='Periodo', zlab='', ticktype="detailed", zlim=c(min(z),0.95))
 rm(list=c("z", "edad", "tiempo", "color", "zfacet", "facetcol"))
 
-# Error cuadrático medio
-error_m <- apply(ctasas(Dxt_m,Pxt_m,56,65) - for_qxt(est_m)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
-error_m
-error_h <- apply(ctasas(Dxt_h,Pxt_h,56,65) - for_qxt(est_h)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
-error_h
-error_t <- apply(ctasas(Dxt_t,Pxt_t,56,65) - for_qxt(est_t)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
-error_t
-
-
-plot(log(ctasas(Dxt_m,Pxt_m,56,65))[,1], col=2, type='o', ylim=c(-10,0))
-par(new=TRUE)
-plot(log(for_qxt(est_m))[,1], col=3, type='o', ylim=c(-10,0))
-
-
-plot(log(ctasas(Dxt_h,Pxt_h,56,65))[,1], col=2, type='o', ylim=c(-10,0))
-par(new=TRUE)
-plot(log(for_qxt(est_h))[,1], col=3, type='o', ylim=c(-10,0))
 
 
 #######################################
@@ -246,6 +233,7 @@ CBD <- cbd("logit")
 CBDfit_m <- fit(CBD, data = data0_m, ages.fit = 0:105, years=1965:2004)
 CBDfit_h <- fit(CBD, data = data0_h, ages.fit = 0:105, years=1965:2004)
 CBDfit_t <- fit(CBD, data = data0_t, ages.fit = 0:105, years=1965:2004)
+rm(list=c("CBD"))
 
 # Gráfico parámetro kt(1)
 plot(seq(1965,2004),CBDfit_m$kt[1,], type='o', col=2, pch=20, ylim=c(-7,-4), xlab='', ylab='')
@@ -274,10 +262,9 @@ plot(pro_t, only.kt=TRUE, col='lightblue')
 
 tsm <- ts(as.numeric(CBDfit_m$kt[2,]), start=c(1965, 1), end=c(2004, 1), frequency=1)
 tsh <- ts(as.numeric(CBDfit_h$kt[2,]), start=c(1965, 1), end=c(2004, 1), frequency=1)
-
 summary(Arima(tsm, order=c(0,1,0), include.drift=TRUE))
 summary(Arima(tsh, order=c(0,1,0), include.drift=TRUE))
-
+rm(list=c("tsm", "tsh"))
 
 
 # Transforma vectores en matrices fila o columna
@@ -299,7 +286,6 @@ lg_qxt <- function(pro){
       return(q)
 }
 
-lg_qxt(pro_m)-pro_m$rates
 
 # Gráfico tridimensional - Log tasas de mortalidad
 z <- log(pro_h$rates)
@@ -313,25 +299,39 @@ persp(edad, tiempo, z, theta=-30, phi=30, expand=0.75, xlab='Edad', col=color[fa
 rm(list=c("z", "edad", "tiempo", "color", "zfacet", "facetcol"))
 
 
-# Error cuadrático medio
-err_m <- apply(ctasas(Dxt_m,Pxt_m,56,65)[61:106,] - lg_qxt(pro_m)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
-err_m
-err_h <- apply(ctasas(Dxt_h,Pxt_h,56,65)[61:106,] - lg_qxt(pro_h)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
-err_h
-err_t <- apply(ctasas(Dxt_t,Pxt_t,56,65)[61:106,] - lg_qxt(pro_t)[,c(1:10)], 2, function(x){sqrt(sum(x^2/length(x)))})
-err_t
-
 
 
 ########################################
 #####     Ajuste modelo li-lee     #####
 ########################################
 
+dataL_m <- demogdata(data=mxt_m, pop=Ext_m[,c(16:55)], ages=c(0:105), years=c(1965:2004), 
+                                type="mortality", label="Spain", name="female")
+dataL_h <- demogdata(data=mxt_h, pop=Ext_h[,c(16:55)], ages=c(0:105), years=c(1965:2004), 
+                                type="mortality", label="Spain", name="male")
+dataL_t <- demogdata(data=mxt_t, pop=Ext_t[,c(16:55)], ages=c(0:105), years=c(1965:2004), 
+                                type="mortality", label="Spain", name="total")
 
-LCT <- lc(link="log", const = "sum")
-LCT_m <- fit(LCT, data = data0_m, ages.fit = 0:105, years=1950:2005)
-LCT_h <- fit(LCT, data = data0_h, ages.fit = 0:105, years=1950:2005)
-LCT_t <- fit(LCT, data = data0_t, ages.fit = 0:105, years=1950:2005)
+LCT_m <- lca(dataL_m, max.age = 105)
+LCT_h <- lca(dataL_h, max.age = 105)
+LCT_t <- lca(dataL_t, max.age = 105)
+
+# Gráfico parámetro ax - Hombres & Mujeres
+plot(LCT_m$ax, type='o', col=2, pch=20, ylim=c(-10,0), xlab='', ylab='')
+par(new=TRUE)
+plot(LCT_h$ax, type='o', col=3, pch=20, ylim=c(-10,0), xlab='', ylab='')
+legend(60, -5, legend=c("Mujeres", "Hombres"), col=c("red", "green"), cex=0.9, lwd=3, bty = 'n')
+
+# Gráfico parámetro Bx - Total
+plot(LCT_t$bx, type='o', col=4, pch=20, ylim=c(-0.026,0.036), xlab='', ylab='')
+abline(h=0,lty=3)
+legend(50, -0.003, legend=c("Total"), col=c("blue"), cex=0.9, lwd=3, bty = 'n')
+
+# Gráfico parámetro Kt - Total
+plot(LCT_t$kt, type='o', col=4, pch=20, ylim=c(-38,32), xlab='', ylab='')
+abline(h=0,lty=3)
+legend(1980, -15, legend=c("Total"), col=c("blue"), cex=0.9, lwd=3, bty = 'n')
+
 
 res_m <- log(qxt_m)-LCT_m$ax-fm(LCT_t$bx,2)%*%fm(LCT_t$kt,1)
 pres_m <- log(qxt_m)-LCT_m$ax
@@ -340,110 +340,150 @@ pres_h <- log(qxt_h)-LCT_h$ax
 
 # Ratio ajuste factor común
 Rc_m <- 1-(sum(res_m^2))/(sum(pres_m^2))
+Rc_m
 Rc_h <- 1-(sum(res_h^2))/(sum(pres_h^2))
+Rc_h
+rm(list = c("Rc_m", "Rc_h"))
 
 # SVD residuos
 svd_res <- function(residuos){
       res <- residuos - apply(residuos, 1, mean)
       const <- sum(svd(res)$u[,1])
       b <- svd(res)$u[,1]/const
-      k <- const*svd(res)$d[1]*svd(res)$v[,1]
+      k <- const*max(svd(res)$d)*svd(res)$v[,1]
       return(list(bx=b, kt=k))
 }
  
-svd_res(res_m)
+
  
-sum(svd_res(res_m)$bx)
-sum(svd_res(res_m)$kt)
+# Gráfico parámetro bx - Hombres & Mujeres
+plot(svd_res(res_m)$bx, type='o', col=2, pch=20, ylim=c(-0.015,0.055), xlab='', ylab='')
+par(new=TRUE)
+plot(svd_res(res_h)$bx, type='o', col=3, pch=20, ylim=c(-0.015,0.055), xlab='', ylab='')
+abline(h=0,lty=3)
+legend(50, 0.055, legend=c("Mujeres", "Hombres"), col=c("red", "green"), cex=0.9, lwd=3, bty = 'n')
+
+
+# Gráfico parámetro kt - Hombres & Mujeres
+plot(svd_res(res_m)$kt, type='o', col=2, pch=20, ylim=c(-15,15), xlab='', ylab='')
+par(new=TRUE)
+plot(svd_res(res_h)$kt, type='o', col=3, pch=20, ylim=c(-15,15), xlab='', ylab='')
+abline(h=0,lty=3)
+legend(15, -5, legend=c("Mujeres", "Hombres"), col=c("red", "green"), cex=0.9, lwd=3, bty = 'n')
 
 # Ratio ajuste incluye residuos SVD
 nres_m <- log(qxt_m) - LCT_m$ax - fm(LCT_t$bx,2)%*%fm(LCT_t$kt,1) - fm(svd_res(res_m)$bx,2)%*%fm(svd_res(res_m)$kt,1)
 nres_h <- log(qxt_h) - LCT_h$ax - fm(LCT_t$bx,2)%*%fm(LCT_t$kt,1) - fm(svd_res(res_h)$bx,2)%*%fm(svd_res(res_h)$kt,1)
 Rca_m <- 1-(sum(nres_m^2))/(sum(pres_m^2))
+Rca_m
 Rca_h <- 1-(sum(nres_h^2))/(sum(pres_h^2))
+Rca_h
+rm(list = c("Rca_m", "Rca_h", "nres_m", "nres_h"))
+
+
+# Prueba de hipótesis kt: (H0: beta=1, entonces es un RW, caso contrario es un AR(1))
+hreg <- function(res){
+      alfa <- 0.05
+      nkt <- length(svd_res(res)$kt)
+      xm <- svd_res(res)$kt[-nkt]
+      ym <- svd_res(res)$kt[-1]
+      btest <- abs(summary(lm(ym ~ xm))$coef[2,1]-1)/summary(lm(ym ~ xm))$coef[2,2]
+      if(pt(btest,summary(lm(ym ~ xm))$df[2], lower.tail=F)>alfa/2){
+            res <- "Es un RW"
+      } else {
+            res <- "Es un AR(1)"
+      }
+      btest <- abs(summary(lm(ym ~ xm+0))$coef[1,1]-1)/summary(lm(ym ~ xm+0))$coef[1,2]
+      if(pt(btest,summary(lm(ym ~ xm+0))$df[2], lower.tail=F)>alfa/2){
+            res1 <- "Es un RW"
+      } else {
+            res1 <- "Es un AR(1)"
+      }
+      return(list(res, res1))
+}
+
+hreg(res_m)
+hreg(res_h)
 
 
 
-## Obtención de la ratio Rac
+# Proyección parámetro Kt y kt
+pry_t <- forecast(auto.arima(LCT_t$kt), h=50, level=c(90,95))
+plot(pry_t,col='blue')
 
-res1M=resM-bxM%*%t(ktM)
-num=sum(res1M^2)
-den=sum((log(dM)-axM)^2)
-RacM=1-num/den
-RacM
+tpm <- ts(svd_res(res_m)$kt, start=c(1965, 1), end=c(2004, 1), frequency=1)
+tph <- ts(svd_res(res_h)$kt, start=c(1965, 1), end=c(2004, 1), frequency=1)
 
-res1F=resF-bxF%*%t(ktF)
-num=sum(res1F^2)
-den=sum((log(dF)-axF)^2)
-RacF=1-num/den
-RacF
-
-## Comprobación de la existencia de un AR(1) en los kti (H0: beta=1, entonces es un RW)
-
-alfa=0.05
-N=length(ktM)
-XM=ktM[-N]
-YM=ktM[-1]
-
-MX=lm(YM~XM)
-summary(MX)
-
-i=length(MX$coef)
-test=abs((MX$coef[i]-1)/summary(MX)$coef[i,2])
-p.val=pt(test,summary(MX)$df[2],lower.tail=F)
-if(p.val>alfa/2) "Es un RW" else "Es un AR(1)"
-MP[1,1]=summary(MX)$coef[1,1]
-MP[1,2]=summary(MX)$coef[1,4]
-MP[1,3]=summary(MX)$coef[2,1]
-MP[1,4]=summary(MX)$coef[2,4]
-MP[1,5]=if(p.val>alfa/2) print("RW",quote=F) else print("AR(1)",quote=F)
-
-MX2=lm(YM~XM+0)
-summary(MX2)
-
-i=length(MX2$coef)
-test=abs((MX2$coef[i]-1)/summary(MX2)$coef[i,2])
-p.val=pt(test,summary(MX2)$df[2],lower.tail=F)
-if(p.val>alfa/2) "Es un RW" else "Es un AR(1)"
-MP2[1,3]=summary(MX2)$coef[1,1]
-MP2[1,4]=summary(MX2)$coef[1,4]
-MP2[1,5]=if(p.val>alfa/2) "RW" else "AR(1)"
-
-XF=ktF[-N]
-YF=ktF[-1]
-
-MX=lm(YF~XF)
-summary(MX)
-
-i=length(MX$coef)
-test=abs((MX$coef[i]-1)/summary(MX)$coef[i,2])
-p.val=pt(test,summary(MX)$df[2],lower.tail=F)
-if(p.val>alfa/2) "Es un RW" else "Es un AR(1)"
-MP[2,1]=summary(MX)$coef[1,1]
-MP[2,2]=summary(MX)$coef[1,4]
-MP[2,3]=summary(MX)$coef[2,1]
-MP[2,4]=summary(MX)$coef[2,4]
-MP[2,5]=if(p.val>alfa/2) "RW" else "AR(1)"
-
-MX2=lm(YF~XF+0)
-summary(MX2)
-
-i=length(MX2$coef)
-test=abs((MX2$coef[i]-1)/summary(MX2)$coef[i,2])
-p.val=pt(test,summary(MX2)$df[2],lower.tail=F)
-if(p.val>alfa/2) "Es un RW" else "Es un AR(1)"
-MP2[2,3]=summary(MX2)$coef[1,1]
-MP2[2,4]=summary(MX2)$coef[1,4]
-MP2[2,5]=if(p.val>alfa/2) "RW" else "AR(1)"
+pry_m <- forecast(auto.arima(tpm), h=50, level=c(90,95))
+plot(pry_m, col=1, fcol=1, shadecols="lightgreen")
+pry_h<- forecast(auto.arima(tph), h=50, level=c(90,95))
+plot(pry_h, col=1, fcol=1, shadecols="lightpink")
 
 
-#### Almacenamiento de los kt (global y por sexos)
+li_qxt <- function(LCa, LCTb, res, pryt, pry){
+      estm <- exp(LCa$ax - fm(LCTb$bx,2)%*%fm(as.numeric(pryt$mean),1) - fm(svd_res(res_m)$bx,2)%*%fm(as.numeric(pry$mean),1))
+      q <- 2*estm/(2+estm)
+      colnames(q) <- seq(2005, 2054)
+      return(q)
+}
 
-kappa=cbind(K,ktM,ktF)
-write.table(kappa,"kappaT.txt",row.names=T)
+
+# Gráfico tridimensional - Log probabilidades de muerte
+z <- log(li_qxt(LCT_h, LCT_t, res_h, pry_t, pry_h))
+edad <- seq(0, 105, by=1)
+tiempo <- seq(2005, 2054, by=1)
+color <- colorRampPalette(c("green", "yellow", "orange", "red"))(50)
+zfacet <- z[-1, -1] + z[-1, -length(tiempo)] + z[-length(edad), -1] + z[-length(edad), -length(tiempo)]
+facetcol <- cut(zfacet, 50)
+persp(edad, tiempo, z, theta=-30, phi=30, expand=0.75, xlab='Edad', col=color[facetcol],
+      ylab='Periodo', zlab='', ticktype="detailed", zlim=c(min(z),0))
+rm(list=c("z", "edad", "tiempo", "color", "zfacet", "facetcol"))
 
 
-final=Sys.time()
+########################################
+#####     Análisis de residuos     #####
+########################################
 
-(duración=final-inicio)
+# Error cuadrático medio #
 
+ecm <- function(datar, datae){
+      error <- apply(datar - datae, 2, function(x){sqrt(sum(x^2/length(x)))})
+      return(error)
+}
+
+# Error porcentual absoluto medio #
+
+epam <- function(datar, datae){
+      dife <- abs(datar-datae)/datar
+      error <- apply(dife, 2, function(x){sum(x)/length(x)})
+      return(error)
+}
+
+
+# LCP
+ecm(ctasas(Dxt_m,Pxt_m,56,65), for_qxt(est_m)[,c(1:10)])
+ecm(ctasas(Dxt_h,Pxt_h,56,65), for_qxt(est_h)[,c(1:10)])
+
+epam(ctasas(Dxt_m,Pxt_m,56,65), for_qxt(est_m)[,c(1:10)])
+epam(ctasas(Dxt_h,Pxt_h,56,65), for_qxt(est_h)[,c(1:10)])
+
+# LL
+ecm(ctasas(Dxt_m,Pxt_m,56,65), lg_qxt(pro_m)[,c(1:10)])
+ecm(ctasas(Dxt_h,Pxt_h,56,65), lg_qxt(pro_h)[,c(1:10)])
+
+epam(ctasas(Dxt_m,Pxt_m,56,65), lg_qxt(pro_m)[,c(1:10)])
+epam(ctasas(Dxt_h,Pxt_h,56,65), lg_qxt(pro_h)[,c(1:10)])
+
+# CBD
+ecm(ctasas(Dxt_m,Pxt_m,56,65), li_qxt(LCT_m, LCT_t, res_m, pry_t, pry_m)[,c(1:10)])
+ecm(ctasas(Dxt_h,Pxt_h,56,65), li_qxt(LCT_h, LCT_t, res_h, pry_t, pry_h)[,c(1:10)])
+
+epam(ctasas(Dxt_m,Pxt_m,56,65), li_qxt(LCT_m, LCT_t, res_m, pry_t, pry_m)[,c(1:10)])
+epam(ctasas(Dxt_h,Pxt_h,56,65), li_qxt(LCT_h, LCT_t, res_h, pry_t, pry_h)[,c(1:10)])
+
+
+# Graficos comparativos
+
+
+
+time <- start - Sys.time()
